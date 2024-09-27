@@ -1,0 +1,114 @@
+-- Place this script in StarterPlayerScripts
+
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Create GUI elements
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = PlayerGui
+
+local mainButton = Instance.new("TextButton")
+mainButton.Size = UDim2.new(0, 200, 0, 50)
+mainButton.Position = UDim2.new(0.5, -100, 0.5, -25)
+mainButton.Text = "Open Menu"
+mainButton.Parent = ScreenGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 250)
+frame.Position = UDim2.new(0.5, -150, 0.5, -125)
+frame.Visible = false
+frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+frame.Parent = ScreenGui
+
+-- Create TextLabel for position display
+local positionLabel = Instance.new("TextLabel")
+positionLabel.Size = UDim2.new(1, 0, 0, 50)
+positionLabel.Position = UDim2.new(0, 0, 0, 0)
+positionLabel.Text = "Position: (0, 0, 0)"
+positionLabel.Parent = frame
+
+-- Create TextButtons for each shape
+local shapeButtons = {
+	{"Block", UDim2.new(0, 100, 0, 50)},
+	{"Sphere", UDim2.new(0, 100, 0, 50)},
+	{"Wedge", UDim2.new(0, 100, 0, 50)},
+	{"Corner Wedge", UDim2.new(0, 100, 0, 50)},
+	{"Cylinder", UDim2.new(0, 100, 0, 50)}
+}
+
+local createdParts = {} -- Table to keep track of created parts
+
+for i, shape in ipairs(shapeButtons) do
+	local button = Instance.new("TextButton")
+	button.Size = shape[2]
+	button.Position = UDim2.new(0.5, -50, 0, (i - 1) * 50 + 50) -- Adjust position for buttons
+	button.Text = shape[1]
+	button.Parent = frame
+
+	-- Click event for each shape button
+	button.MouseButton1Click:Connect(function()
+		local part
+		if shape[1] == "Block" then
+			part = Instance.new("Part")
+			part.Size = Vector3.new(4, 1, 4)
+		elseif shape[1] == "Sphere" then
+			part = Instance.new("Part")
+			part.Shape = Enum.PartType.Ball
+			part.Size = Vector3.new(4, 4, 4)
+		elseif shape[1] == "Wedge" then
+			part = Instance.new("WedgePart")
+			part.Size = Vector3.new(4, 1, 4)
+		elseif shape[1] == "Corner Wedge" then
+			part = Instance.new("WedgePart")
+			part.Size = Vector3.new(4, 1, 4)
+			part.CFrame = CFrame.Angles(0, math.pi / 2, 0)
+		elseif shape[1] == "Cylinder" then
+			part = Instance.new("Part")
+			part.Shape = Enum.PartType.Cylinder
+			part.Size = Vector3.new(4, 4, 4)
+		end
+
+		-- Set the part's properties
+		part.Position = Player.Character.HumanoidRootPart.Position + Vector3.new(0, -5, 0) -- Spawn below the player
+		part.Anchored = true -- Anchor the part
+		part.Parent = workspace
+
+		-- Add the part to the created parts table
+		table.insert(createdParts, part)
+	end)
+end
+
+-- Create Undo button
+local undoButton = Instance.new("TextButton")
+undoButton.Size = UDim2.new(0, 100, 0, 50)
+undoButton.Position = UDim2.new(0.5, -50, 0, #shapeButtons * 50 + 50) -- Position below the shape buttons
+undoButton.Text = "Undo"
+undoButton.Parent = frame
+
+-- Click event for the Undo button
+undoButton.MouseButton1Click:Connect(function()
+	-- Remove the last created part
+	if #createdParts > 0 then
+		local partToRemove = table.remove(createdParts) -- Get the last part
+		partToRemove:Destroy() -- Remove it from the Workspace
+	end
+end)
+
+-- Function to update position label
+local function updatePositionLabel()
+	if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+		local position = Player.Character.HumanoidRootPart.Position
+		positionLabel.Text = string.format("Position: (%.2f, %.2f, %.2f)", position.X, position.Y, position.Z)
+	end
+end
+
+-- Toggle frame visibility on main button click
+mainButton.MouseButton1Click:Connect(function()
+	frame.Visible = not frame.Visible
+end)
+
+-- Update position label continuously
+while true do
+	updatePositionLabel()
+	wait(0.1) -- Update every 0.1 seconds
+end
